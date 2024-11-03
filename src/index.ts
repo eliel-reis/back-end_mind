@@ -1,4 +1,6 @@
-import express from "express";
+import express, { Request, Response } from "express";
+
+import cors from "cors";
 import { cadastrar_produto } from "./service/cadastrar_produto";
 import { consultar_produto } from "./service/consultar_produto";
 import { editar_produto } from "./service/editar_produto";
@@ -7,15 +9,21 @@ import { registrar_entrada } from "./service/registrar_entradas";
 import { registrar_saida } from "./service/registrar_saidas";
 import { consultar_entrada } from "./service/consultar_entradas";
 import { consultar_saida } from "./service/constultar_saidas";
+import Confirmar_Login from "./service/confirmar_login";
 
 const app = express();
 
 app.use(express.json());
+app.use(cors());
+app.use(express.urlencoded({ extended: true }));
 
-app.post("/cadastrar_produtos", async (req, res) => {
+//adicionar imagems desse site: https://www.istockphoto.com/br
+app.post("/cadastrar_produtos", async (req: Request, res: Response) => {
   const nome = req.body.nome;
   const descricao = req.body.descricao;
+
   const imagem = req.body.imagem;
+
   const valor = req.body.valor;
 
   try {
@@ -27,43 +35,45 @@ app.post("/cadastrar_produtos", async (req, res) => {
   }
 });
 
-app.get("/", async (req, res) => {
+app.get("/consultar_produtos", async (req, res) => {
   const resposta = await consultar_produto();
 
   res.json(resposta);
 });
 
-app.put("/editar_produtos/:id", async (req, res) => {
-  const id = req.params.id;
+//adicionar imagems desse site: https://www.istockphoto.com/br
+app.put("/editar_produtos", async (req: Request, res: Response) => {
   const nome = req.body.nome;
   const descricao = req.body.descricao;
+
   const imagem = req.body.imagem;
+
   const valor = req.body.valor;
 
-  await editar_produto(nome, descricao, imagem, valor, parseInt(id));
+  await editar_produto(nome, descricao, imagem, valor);
   res.status(204).end();
 });
 
-app.delete("/deletar_produtos/:id", async (req, res) => {
-  const id = req.params.id;
+app.delete("/deletar_produtos", async (req, res) => {
+  const nome = req.body.nome;
 
-  await deletar_produto(parseInt(id));
+  await deletar_produto(nome);
   res.status(204).end();
 });
 
 app.post("/entrada_produtos", async (req, res) => {
-  const id_produto = req.body.id_produto;
+  const nome = req.body.nome;
   const quantidade = req.body.quantidade;
 
-  await registrar_entrada(id_produto, quantidade);
+  await registrar_entrada(nome, quantidade);
   res.status(204).end();
 });
 
 app.post("/saida_produtos", async (req, res) => {
-  const id_produto: number = req.body.id_produto;
+  const nome: string = req.body.nome;
   const quantidade: number = req.body.quantidade;
 
-  await registrar_saida(id_produto, quantidade);
+  await registrar_saida(nome, quantidade);
   res.status(204).end();
 });
 
@@ -77,6 +87,15 @@ app.get("/consultar_saidas", async (req, res) => {
   const resposta = await consultar_saida();
 
   res.json(resposta);
+});
+
+app.post("/confirmar_login", async (req, res) => {
+  const usuario = req.body.usuario;
+  const senha = req.body.senha;
+
+  const dados = await Confirmar_Login(usuario, senha);
+
+  res.json(dados);
 });
 
 app.listen(3001, () => {
